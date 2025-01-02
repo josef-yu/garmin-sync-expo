@@ -15,12 +15,14 @@ function NoPermissions() {
 
 export default function HomeScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { permissions, lastSync } = useHealthSync()
+  const { permissions, lastSync, getLastSyncDate } = useHealthSync()
 
   const doAction = async (fn: () => Promise<void>) => {
     setIsSubmitting(true)
 
     await fn()
+
+    await getLastSyncDate()
 
     setIsSubmitting(false)
   }

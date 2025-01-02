@@ -7,6 +7,7 @@ import {
   PropsWithChildren,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from 'react'
 import {
@@ -19,9 +20,15 @@ interface HealthSyncValues {
   isInitialized?: boolean
   permissions?: Permission[]
   lastSync?: SyncTableSelectType
+  getLastSyncDate: () => Promise<void>
 }
 
-export const HealthSyncContext = createContext<HealthSyncValues>({})
+const defaultContextValues: HealthSyncValues = {
+  getLastSyncDate: async () => {},
+}
+
+export const HealthSyncContext =
+  createContext<HealthSyncValues>(defaultContextValues)
 
 export const useHealthSync = () => useContext(HealthSyncContext)
 
@@ -76,11 +83,22 @@ export const HealthSyncProvider = ({
 
   useEffect(() => {
     getLastSyncDate()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const value = useMemo(
+    () => ({
+      permissions,
+      isInitialized,
+      lastSync,
+      getLastSyncDate,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [permissions, lastSync, isInitialized],
+  )
+
   return (
-    <HealthSyncContext.Provider
-      value={{ permissions, isInitialized, lastSync }}>
+    <HealthSyncContext.Provider value={value}>
       {children}
     </HealthSyncContext.Provider>
   )
