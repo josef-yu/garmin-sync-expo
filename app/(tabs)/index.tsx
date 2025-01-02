@@ -15,7 +15,7 @@ function NoPermissions() {
 
 export default function HomeScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { permissions } = useHealthSync()
+  const { permissions, lastSync } = useHealthSync()
 
   const doAction = async (fn: () => Promise<void>) => {
     setIsSubmitting(true)
@@ -42,7 +42,15 @@ export default function HomeScreen() {
               Sync Steps
             </Button>
             <XStack width="75%" justifyContent="center">
-              <Text>Last sync</Text>
+              {lastSync ? (
+                <Text>
+                  Last sync at{' '}
+                  {lastSync.created_at?.toLocaleDateString('en-CA')} with data
+                  from {lastSync.data_timestamp.toLocaleDateString('en-CA')}
+                </Text>
+              ) : (
+                <Text>No sync history.</Text>
+              )}
             </XStack>
           </>
         ) : (

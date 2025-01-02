@@ -1,3 +1,6 @@
+import { DatabaseInstance } from '@/app/_layout'
+import { syncTable, SyncTableSelectType } from '@/db/schema'
+import { desc } from 'drizzle-orm'
 import {
   createContext,
   PropsWithChildren,
@@ -14,15 +17,32 @@ import {
 interface HealthSyncValues {
   isInitialized?: boolean
   permissions?: Permission[]
+  lastSync?: SyncTableSelectType
 }
 
 export const HealthSyncContext = createContext<HealthSyncValues>({})
 
 export const useHealthSync = () => useContext(HealthSyncContext)
 
-export const HealthSyncProvider = ({ children }: PropsWithChildren) => {
+export const HealthSyncProvider = ({
+  children,
+  db,
+}: PropsWithChildren & { db: DatabaseInstance }) => {
   const [isInitialized, setIsInitialized] = useState(false)
   const [permissions, setPermissions] = useState<Permission[]>([])
+  const [lastSync, setLastSync] = useState<SyncTableSelectType>()
+
+  const getLastSyncDate = async () => {
+    const lastSyncData = await db
+      .select()
+      .from(syncTable)
+      .orderBy(desc(syncTable.data_timestamp))
+      .limit(1)
+
+    if (lastSyncData.length === 1) {
+      setLastSync(lastSyncData[1])
+    }
+  }
 
   useEffect(() => {
     const init = async () => {
@@ -51,8 +71,13 @@ export const HealthSyncProvider = ({ children }: PropsWithChildren) => {
     init()
   }, [])
 
+  useEffect(() => {
+    getLastSyncDate()
+  }, [])
+
   return (
-    <HealthSyncContext.Provider value={{ permissions, isInitialized }}>
+    <HealthSyncContext.Provider
+      value={{ permissions, isInitialized, lastSync }}>
       {children}
     </HealthSyncContext.Provider>
   )

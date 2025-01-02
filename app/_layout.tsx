@@ -20,8 +20,16 @@ import { useColorScheme } from '@/hooks/useColorScheme'
 import { useGarmin } from '@/hooks/useGarmin'
 import { tamaguiConfig } from '@/theme/tamagui.config'
 
+import * as SQLite from 'expo-sqlite'
+import { drizzle } from 'drizzle-orm/expo-sqlite'
+
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync()
+
+const expo = SQLite.openDatabaseSync('sync.db')
+const db = drizzle(expo)
+
+export type DatabaseInstance = typeof db
 
 export function App() {
   const [loaded] = useFonts({
@@ -61,7 +69,7 @@ export default function RootLayout() {
   return (
     <TamaguiProvider config={tamaguiConfig} defaultTheme={colorScheme!}>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <HealthSyncProvider>
+        <HealthSyncProvider db={db}>
           <App />
         </HealthSyncProvider>
         <StatusBar style="auto" />
