@@ -1,39 +1,71 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from '@react-navigation/native'
+import { TamaguiProvider } from '@tamagui/core'
+import { useFonts } from 'expo-font'
+import { Stack } from 'expo-router'
+import * as SplashScreen from 'expo-splash-screen'
+import { StatusBar } from 'expo-status-bar'
+import { useEffect } from 'react'
+import 'react-native-reanimated'
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { AuthGuard } from '@/components/AuthGuard'
+import {
+  HealthSyncProvider,
+  useHealthSync,
+} from '@/components/HealthSyncProvider'
+import { useColorScheme } from '@/hooks/useColorScheme'
+import { useGarmin } from '@/hooks/useGarmin'
+import { tamaguiConfig } from '@/theme/tamagui.config'
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync()
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+export function App() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+  })
+  const { garminClient, isInitialized: isClientInitialized } = useGarmin()
+  const { isInitialized } = useHealthSync()
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
+    if (loaded && isClientInitialized && isInitialized) {
+      SplashScreen.hideAsync()
     }
-  }, [loaded]);
+  }, [loaded, isClientInitialized, isInitialized])
 
-  if (!loaded) {
-    return null;
+  if (!loaded || !isClientInitialized || !isInitialized) {
+    return null
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );
+    <>
+      {garminClient && (
+        <AuthGuard garminClient={garminClient}>
+          <Stack>
+            <Stack.Screen name="login" />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="+not-found" />
+          </Stack>
+        </AuthGuard>
+      )}
+    </>
+  )
+}
+
+export default function RootLayout() {
+  const colorScheme = useColorScheme()
+
+  return (
+    <TamaguiProvider config={tamaguiConfig} defaultTheme={colorScheme!}>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <HealthSyncProvider>
+          <App />
+        </HealthSyncProvider>
+        <StatusBar style="auto" />
+      </ThemeProvider>
+    </TamaguiProvider>
+  )
 }
