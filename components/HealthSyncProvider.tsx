@@ -1,5 +1,6 @@
 import { DatabaseInstance } from '@/app/_layout'
 import { syncTable, SyncTableSelectType } from '@/db/schema'
+import { showToast } from '@/utils/toast'
 import { desc } from 'drizzle-orm'
 import {
   createContext,
@@ -51,6 +52,7 @@ export const HealthSyncProvider = ({
       setIsInitialized(isClientInitialized)
 
       if (!isClientInitialized) {
+        showToast('Health connect client failed to initilize!')
         console.log('Health connect client failed to initilize!')
         return
       }
@@ -61,6 +63,7 @@ export const HealthSyncProvider = ({
       ])
 
       if (!grantedPermissions || grantedPermissions.length === 0) {
+        showToast('Failed to grant permissions!')
         console.log('Failed to grant permissions!')
         return
       }

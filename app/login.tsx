@@ -1,4 +1,5 @@
 import { useAuthContext } from '@/components/AuthGuard'
+import { showToast } from '@/utils/toast'
 import { router } from 'expo-router'
 import { useEffect, useState } from 'react'
 
@@ -31,6 +32,7 @@ export default function Login() {
       await auth?.garminClient.login(username, password)
     } catch (e) {
       console.log('error', e)
+      showToast(String(e))
       setStatus('off')
       return
     }
