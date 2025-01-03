@@ -22,6 +22,8 @@ import { tamaguiConfig } from '@/theme/tamagui.config'
 
 import * as SQLite from 'expo-sqlite'
 import { drizzle } from 'drizzle-orm/expo-sqlite'
+import { BackHandler, Platform } from 'react-native'
+import { showToast } from '@/utils/toast'
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync()
@@ -65,6 +67,28 @@ export function App() {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme()
+  const isAndroid = Platform.OS === 'android'
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout
+
+    if (!isAndroid) {
+      console.log('This can only be run on android!')
+      showToast('This can only be run on android!')
+      timeout = setTimeout(() => BackHandler.exitApp(), 3000)
+    }
+
+    return () => {
+      if (timeout) {
+        clearTimeout(timeout)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  if (!isAndroid) {
+    return null
+  }
 
   return (
     <TamaguiProvider config={tamaguiConfig} defaultTheme={colorScheme!}>
