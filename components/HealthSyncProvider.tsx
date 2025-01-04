@@ -1,5 +1,6 @@
 import { DatabaseInstance } from '@/app/_layout'
-import { syncTable, SyncTableSelectType } from '@/db/schema'
+import { syncTable, SyncTableSelectType, SyncTableTypeEnum } from '@/db/schema'
+import { DailySteps } from '@/services/garmin'
 import { showToast } from '@/utils/toast'
 import { desc } from 'drizzle-orm'
 import {
@@ -12,19 +13,24 @@ import {
 } from 'react'
 import {
   initialize,
+  insertRecords,
   Permission,
   requestPermission,
 } from 'react-native-health-connect'
+
+type StepsSyncData = Pick<DailySteps, 'calendarDate' | 'totalSteps'>
 
 interface HealthSyncValues {
   isInitialized?: boolean
   permissions?: Permission[]
   lastSync?: SyncTableSelectType
   getLastSyncDate: () => Promise<void>
+  syncSteps: (stepsData: StepsSyncData[]) => Promise<void>
 }
 
 const defaultContextValues: HealthSyncValues = {
   getLastSyncDate: async () => {},
+  syncSteps: async (stepsData: StepsSyncData[]) => {},
 }
 
 export const HealthSyncContext =
@@ -50,6 +56,30 @@ export const HealthSyncProvider = ({
     if (lastSyncData.length === 1) {
       setLastSync(lastSyncData[1])
     }
+  }
+
+  const syncSteps = async (stepsData: StepsSyncData[]) => {
+    await insertRecords(
+      stepsData.map(data => {
+        const startTime = new Date(data.calendarDate)
+        const endTime = new Date(data.calendarDate)
+        endTime.setHours(23, 59, 59, 999)
+
+        return {
+          recordType: 'Steps',
+          count: data.totalSteps,
+          startTime: startTime.toISOString(),
+          endTime: endTime.toISOString(),
+        }
+      }),
+    )
+
+    await db.insert(syncTable).values(
+      stepsData.map(data => ({
+        type: SyncTableTypeEnum.STEPS,
+        data_timestamp: new Date(data.calendarDate),
+      })),
+    )
   }
 
   useEffect(() => {
@@ -92,6 +122,7 @@ export const HealthSyncProvider = ({
       isInitialized,
       lastSync,
       getLastSyncDate,
+      syncSteps,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [permissions, lastSync, isInitialized],
