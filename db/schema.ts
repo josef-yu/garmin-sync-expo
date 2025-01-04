@@ -7,11 +7,15 @@ import {
   unique,
 } from 'drizzle-orm/sqlite-core'
 
+export enum SyncTableTypeEnum {
+  STEPS = 'steps',
+}
+
 export const syncTable = sqliteTable(
   'sync_table',
   {
     id: int().primaryKey({ autoIncrement: true }),
-    type: text({ enum: ['steps'] }).notNull(),
+    type: text({ enum: [SyncTableTypeEnum.STEPS] }).notNull(),
     data_timestamp: integer({ mode: 'timestamp' }).notNull(),
     created_at: integer({ mode: 'timestamp' }).default(
       sql`(CURRENT_TIMESTAMP)`,
