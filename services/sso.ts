@@ -263,4 +263,10 @@ export class SSO {
     )
       await this.getOauth2Token()
   }
+
+  logout() {
+    this.oauth1_token = undefined
+    this.oauth2_token = undefined
+    this.csrfToken = undefined
+  }
 }

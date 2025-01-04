@@ -1,12 +1,6 @@
 import { Garmin } from '@/services/garmin'
 import { router } from 'expo-router'
-import {
-  PropsWithChildren,
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from 'react'
+import { PropsWithChildren, createContext, useContext, useEffect } from 'react'
 
 interface GarminValues {
   garminClient: Garmin
@@ -20,10 +14,8 @@ export const useAuthContext = () => useContext(AuthContext)
 
 export function AuthGuard({
   children,
-  ...garminValues
+  garminClient,
 }: PropsWithChildren & GarminValues) {
-  const [{ garminClient }] = useState(garminValues)
-
   useEffect(() => {
     if (!garminClient.ssoClient.isLoggedIn) {
       router.replace('/login')

@@ -11,9 +11,22 @@ interface RequestOptions {
   use_referrer?: boolean
 }
 
+export interface DayStepsSummary {
+  steps: number
+}
+
+export interface DailySteps {
+  calendarDate: string
+  totalSteps: number
+  totalDistance: number
+  stepGoal: number
+}
+
 export class Garmin {
   private readonly USER_AGENT = 'GCM-iOS-5.7.2.1'
   private readonly BASE_URL = 'https://connectapi.garmin.com'
+
+  static readonly GARMIN_START_DATE = new Date('2011-05-01')
 
   ssoClient: SSO
   userProfile?: UserProfile
@@ -53,6 +66,11 @@ export class Garmin {
     await this.ssoClient.login(username, password)
 
     await this.getProfile()
+  }
+
+  logout() {
+    this.ssoClient.logout()
+    this.userProfile = undefined
   }
 
   private async sendRequest(
@@ -110,7 +128,7 @@ export class Garmin {
     }
   }
 
-  async getStepsData(date: Date) {
+  async getStepsData(date: Date): Promise<DayStepsSummary[]> {
     const params = new URLSearchParams({
       date: date.toLocaleDateString('en-CA'),
     })
@@ -120,7 +138,7 @@ export class Garmin {
     return await this.getRequest(url)
   }
 
-  async getDailySteps(start: Date, end?: Date) {
+  async getDailySteps(start: Date, end?: Date): Promise<DailySteps[]> {
     const startDate = start.toLocaleDateString('en-CA')
     const endDate = end?.toLocaleDateString('en-CA') ?? '0'
 
