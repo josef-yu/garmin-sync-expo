@@ -17,12 +17,8 @@ export const syncTable = sqliteTable(
     id: int().primaryKey({ autoIncrement: true }),
     type: text({ enum: [SyncTableTypeEnum.STEPS] }).notNull(),
     data_timestamp: integer({ mode: 'timestamp' }).notNull(),
-    created_at: integer({ mode: 'timestamp' }).default(
-      sql`(CURRENT_TIMESTAMP)`,
-    ),
-    updated_at: integer({ mode: 'timestamp' }).default(
-      sql`(CURRENT_TIMESTAMP)`,
-    ),
+    created_at: integer({ mode: 'timestamp' }).default(sql`(unixepoch())`),
+    updated_at: integer({ mode: 'timestamp' }).default(sql`(unixepoch())`),
   },
   t => ({
     data_unique: unique().on(t.type, t.data_timestamp),
