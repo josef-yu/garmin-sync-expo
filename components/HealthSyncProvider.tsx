@@ -26,11 +26,13 @@ interface HealthSyncValues {
   lastSync?: SyncTableSelectType
   getLastSyncDate: () => Promise<void>
   syncSteps: (stepsData: StepsSyncData[]) => Promise<void>
+  clearDb: () => Promise<void>
 }
 
 const defaultContextValues: HealthSyncValues = {
   getLastSyncDate: async () => {},
   syncSteps: async (stepsData: StepsSyncData[]) => {},
+  clearDb: async () => {},
 }
 
 export const HealthSyncContext =
@@ -54,7 +56,7 @@ export const HealthSyncProvider = ({
       .limit(1)
 
     if (lastSyncData.length === 1) {
-      setLastSync(lastSyncData[1])
+      setLastSync(lastSyncData[0])
     }
   }
 
@@ -80,6 +82,11 @@ export const HealthSyncProvider = ({
         data_timestamp: new Date(data.calendarDate),
       })),
     )
+  }
+
+  const clearDb = async () => {
+    await db.delete(syncTable)
+    await getLastSyncDate()
   }
 
   useEffect(() => {
@@ -123,6 +130,7 @@ export const HealthSyncProvider = ({
       lastSync,
       getLastSyncDate,
       syncSteps,
+      clearDb,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [permissions, lastSync, isInitialized],

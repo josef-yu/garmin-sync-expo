@@ -83,7 +83,7 @@ export class Garmin {
       method,
     }
 
-    if (!this.ssoClient.oauth2_token || !this.ssoClient.oauth2_expired) {
+    if (!this.ssoClient.oauth2_token || this.ssoClient.oauth2_expired) {
       await this.ssoClient.refreshOauth2Token()
     }
 
@@ -103,8 +103,10 @@ export class Garmin {
     console.log('status', response.status)
     console.log('statustext', response.statusText)
     console.log('headers', response.headers)
+    console.log(await response.text())
 
-    const data = await response.json()
+    const data = await response.clone().json()
+    console.log(data)
     return data
   }
 
@@ -128,19 +130,28 @@ export class Garmin {
     }
   }
 
-  async getStepsData(date: Date): Promise<DayStepsSummary[]> {
-    const params = new URLSearchParams({
-      date: date.toLocaleDateString('en-CA'),
-    })
+  async getStepsData(date?: Date): Promise<DayStepsSummary[]> {
+    let url = `${this.BASE_URL}/wellness-service/wellness/dailySummaryChart/${this.displayName}`
+    console.log(url)
+    if (date) {
+      const params = new URLSearchParams({
+        date: date.toLocaleDateString('en-CA'),
+      })
 
-    let url = `${this.BASE_URL}/wellness-service/wellness/dailySummaryChart/${this.displayName}?${params}`
+      url += `?${params}`
+    }
 
     return await this.getRequest(url)
   }
 
   async getDailySteps(start: Date, end?: Date): Promise<DailySteps[]> {
+    const now = new Date().toLocaleDateString('en-CA')
     const startDate = start.toLocaleDateString('en-CA')
-    const endDate = end?.toLocaleDateString('en-CA') ?? '0'
+    let endDate = end?.toLocaleDateString('en-CA') ?? now
+
+    if (startDate === now) {
+      endDate = '0'
+    }
 
     let url = `${this.BASE_URL}/usersummary-service/stats/steps/daily/${startDate}/${endDate}`
 

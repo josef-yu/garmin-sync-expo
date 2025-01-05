@@ -1,14 +1,16 @@
-import { useGarmin } from '@/hooks/useGarmin'
-import { LogOut } from '@tamagui/lucide-icons'
+import { useAuthContext } from '@/components/AuthGuard'
+import { useHealthSync } from '@/components/HealthSyncProvider'
+import { Delete, LogOut } from '@tamagui/lucide-icons'
 import { router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Button, ScrollView } from 'tamagui'
 
 export default function TabTwoScreen() {
-  const { garminClient } = useGarmin()
+  const auth = useAuthContext()
+  const { clearDb } = useHealthSync()
 
   const logout = () => {
-    garminClient?.logout()
+    auth?.garminClient?.logout()
     router.dismissTo('/login')
   }
 
@@ -22,6 +24,14 @@ export default function TabTwoScreen() {
           textAlign="left"
           icon={<LogOut />}>
           Logout
+        </Button>
+        <Button
+          onPress={clearDb}
+          width="100%"
+          marginTop="$3"
+          textAlign="left"
+          icon={<Delete />}>
+          Clear local data
         </Button>
       </ScrollView>
     </SafeAreaView>

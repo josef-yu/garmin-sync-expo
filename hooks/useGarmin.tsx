@@ -8,12 +8,12 @@ export function useGarmin() {
     const init = async () => {
       const keys = await Garmin.getConsumerKeys()
 
-      setGarminClient(
-        new Garmin({
-          consumerKey: keys.consumer_key,
-          consumerSecret: keys.consumer_secret,
-        }),
-      )
+      const client = new Garmin({
+        consumerKey: keys.consumer_key,
+        consumerSecret: keys.consumer_secret,
+      })
+
+      setGarminClient(client)
     }
 
     init()

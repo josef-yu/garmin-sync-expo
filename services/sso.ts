@@ -1,4 +1,5 @@
 import { Oauth, Oauth1Token, Oauth2Token } from '@/services/oauth'
+import * as SecureStore from 'expo-secure-store'
 
 export interface SSOParameters {
   consumerKey: string
@@ -24,6 +25,9 @@ export class SSO {
     redirectAfterAccountCreationUrl: this.SSO_EMBED_URL,
   }
 
+  private readonly OAUTH1_TOKEN_KEY = 'oauth1_token'
+  private readonly OAUTH2_TOKEN_KEY = 'oauth2_token'
+
   private readonly USER_AGENT =
     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15'
   private readonly API_USER_AGENT = 'com.garmin.android.apps.connectmobile'
@@ -40,6 +44,20 @@ export class SSO {
     this.OauthClient = new Oauth(params.consumerKey, params.consumerSecret)
 
     this.domain = params.domain ?? 'garmin.com'
+
+    this.oauth1_token = this.parseSavedToken(this.OAUTH1_TOKEN_KEY)
+
+    this.oauth2_token = this.parseSavedToken(this.OAUTH2_TOKEN_KEY)
+  }
+
+  parseSavedToken<T>(key: string): T | undefined {
+    try {
+      const tokenString = SecureStore.getItem(key)
+
+      if (tokenString) return JSON.parse(tokenString)
+    } catch (e) {
+      console.log('Malformed saveed token', e)
+    }
   }
 
   get oauth2_expired() {
@@ -191,6 +209,11 @@ export class SSO {
       oauth_token_secret,
     }
 
+    SecureStore.setItem(
+      this.OAUTH1_TOKEN_KEY,
+      JSON.stringify(this.oauth1_token),
+    )
+
     return this.oauth1_token
   }
 
@@ -232,6 +255,11 @@ export class SSO {
       refresh_token_expires_at: now + oauth2Data.refresh_token_expires_in,
     }
 
+    SecureStore.setItem(
+      this.OAUTH2_TOKEN_KEY,
+      JSON.stringify(this.oauth2_token),
+    )
+
     return this.oauth2_token
   }
 
@@ -264,9 +292,12 @@ export class SSO {
       await this.getOauth2Token()
   }
 
-  logout() {
+  async logout() {
     this.oauth1_token = undefined
     this.oauth2_token = undefined
     this.csrfToken = undefined
+
+    await SecureStore.deleteItemAsync(this.OAUTH1_TOKEN_KEY)
+    await SecureStore.deleteItemAsync(this.OAUTH2_TOKEN_KEY)
   }
 }
