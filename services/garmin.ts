@@ -1,8 +1,13 @@
 import { SSO, SSOParameters } from '@/services/sso'
+import * as SecureStore from 'expo-secure-store'
 
 export interface UserProfile {
   displayName: string
   fullName: string
+  profileImageUrlLarge: string
+  profileImageUrlMedium: string
+  profileImageUrlSmall: string
+  location: string
 }
 
 type FetchMethod = 'POST' | 'GET'
@@ -25,6 +30,7 @@ export interface DailySteps {
 export class Garmin {
   private readonly USER_AGENT = 'GCM-iOS-5.7.2.1'
   private readonly BASE_URL = 'https://connectapi.garmin.com'
+  private readonly USER_PROFILE_KEY = 'user_profile'
 
   static readonly GARMIN_START_DATE = new Date('2011-05-01')
 
@@ -35,6 +41,18 @@ export class Garmin {
 
   constructor(ssoParams: SSOParameters) {
     this.ssoClient = new SSO(ssoParams)
+
+    this.getSavedUserProfile()
+  }
+
+  getSavedUserProfile() {
+    try {
+      const savedProfile = SecureStore.getItem(this.USER_PROFILE_KEY)
+
+      if (savedProfile) this.userProfile = JSON.parse(savedProfile)
+    } catch (e) {
+      console.log('No user profile found or malformed data', e)
+    }
   }
 
   static async getConsumerKeys() {
@@ -115,7 +133,7 @@ export class Garmin {
   }
 
   async getProfile() {
-    const url = `${this.BASE_URL}/userprofile-service/userprofile/userProfileBase `
+    const url = `${this.BASE_URL}/userprofile-service/socialProfile`
 
     const response = await this.getRequest(url)
 
@@ -124,10 +142,9 @@ export class Garmin {
       throw new Error('Failed to get user profile')
     }
 
-    this.userProfile = {
-      ...response,
-      fullName: `${response.firstName} ${response.lastName}`,
-    }
+    this.userProfile = response
+
+    SecureStore.setItem(this.USER_PROFILE_KEY, JSON.stringify(response))
   }
 
   async getStepsData(date?: Date): Promise<DayStepsSummary[]> {
