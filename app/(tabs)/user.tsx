@@ -1,6 +1,6 @@
 import { useAuthContext } from '@/components/AuthGuard'
 import { useHealthSync } from '@/components/HealthSyncProvider'
-import { Delete, LogOut } from '@tamagui/lucide-icons'
+import { LogOut, Trash2 } from '@tamagui/lucide-icons'
 import { router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import {
@@ -77,7 +77,7 @@ export default function TabTwoScreen() {
           width="100%"
           marginTop="$3"
           textAlign="left"
-          icon={<Delete />}>
+          icon={<Trash2 />}>
           Clear local data
         </Button>
       </ScrollView>
