@@ -25,6 +25,9 @@ import { drizzle } from 'drizzle-orm/expo-sqlite'
 import { BackHandler, Platform } from 'react-native'
 import { showToast } from '@/utils/toast'
 
+import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator'
+import migrations from '@/drizzle/migrations'
+
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync()
 
@@ -39,14 +42,21 @@ export function App() {
   })
   const { garminClient, isInitialized: isClientInitialized } = useGarmin()
   const { isInitialized } = useHealthSync()
+  const { success, error } = useMigrations(db, migrations)
 
   useEffect(() => {
-    if (loaded && isClientInitialized && isInitialized) {
+    if (loaded && isClientInitialized && isInitialized && success && !error) {
       SplashScreen.hideAsync()
     }
-  }, [loaded, isClientInitialized, isInitialized])
+  }, [loaded, isClientInitialized, isInitialized, success])
 
-  if (!loaded || !isClientInitialized || !isInitialized) {
+  if (!loaded || !isClientInitialized || !isInitialized || !success) {
+    return null
+  }
+
+  if (error) {
+    console.log('Failed to run migrations', error.message)
+    showToast('Failed to migrate schema changes to db')
     return null
   }
 
