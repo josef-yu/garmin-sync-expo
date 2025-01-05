@@ -8,3 +8,5 @@ declare module '@tamagui/core' {
   // eslint-disable-next-line
   interface TamaguiCustomConfig extends Conf {}
 }
+
+export default tamaguiConfig
